@@ -44,7 +44,7 @@ export class UserResolver {
     if (!req.session.userId){
         return null
     }
-    return em.findOne(User, {id: req.session.userId})
+    return await em.findOne(User, {id: req.session.userId})
   }
 
   @Query(() => [User])
@@ -93,7 +93,7 @@ export class UserResolver {
       }
       console.log(`error when trying to register user. ${err.message}`);
     }
-    req.session.userid = user.id
+    req.session.userId = user.id
 
     return { user };
   }
@@ -127,7 +127,7 @@ export class UserResolver {
         ],
       };
     }
-    req.session.userid = user.id
+    req.session.userId = user.id
 
     return { user };
   }
