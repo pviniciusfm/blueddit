@@ -11,6 +11,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { EntityManager } from "@mikro-orm/postgresql";
 
 @InputType()
 class UsernamePasswordInput {
@@ -39,12 +40,12 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, {nullable: true})
+  @Query(() => User, { nullable: true })
   async me(@Ctx() { em, req }: MyContext): Promise<User | null> {
-    if (!req.session.userId){
-        return null
+    if (!req.session.userId) {
+      return null;
     }
-    return await em.findOne(User, {id: req.session.userId})
+    return await em.findOne(User, { id: req.session.userId });
   }
 
   @Query(() => [User])
@@ -56,30 +57,47 @@ export class UserResolver {
   User(@Arg("id") id: number, @Ctx() { em }: MyContext): Promise<User | null> {
     return em.findOne(User, { id });
   }
-  
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
-    if (options.username.length <= 4 || options.password.length <= 4) {
-      return {
-        errors: [
-          {
-            field: "username or password",
-            message: "username or password must be greater than 4 characters",
-          },
-        ],
-      };
+    const errors = [];
+
+    if (options.username.length < 2) {
+      errors.push({
+        field: "username",
+        message: "username must be greater than 2 characters",
+      });
+    }
+
+    if (options.password.length < 2) {
+      errors.push({
+        field: "password",
+        message: "password must be greater than 2 characters",
+      });
+    }
+
+    if (errors.length) {
+      return { errors };
     }
 
     const passHash = await argon2.hash(options.password);
-    const user = em.create(User, {
-      username: options.username,
-      password: passHash,
-    });
+    // const user = em.create(User, {
+    //   username: options.username,
+    //   password: passHash,
+    // });
+
+    let user;
     try {
-      await em.persistAndFlush(user);
+      const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
+        username: options.username,
+        password: passHash,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }).returning("*");
+      user = result[0]
     } catch (err) {
       if (err.code === "23505") {
         return {
@@ -93,7 +111,7 @@ export class UserResolver {
       }
       console.log(`error when trying to register user. ${err.message}`);
     }
-    req.session.userId = user.id
+    req.session.userId = user.id;
 
     return { user };
   }
@@ -127,7 +145,7 @@ export class UserResolver {
         ],
       };
     }
-    req.session.userId = user.id
+    req.session.userId = user.id;
 
     return { user };
   }
