@@ -14,10 +14,10 @@ function MyApp({ Component, pageProps }) {
   return (
     <Provider value={client}>
       <ThemeProvider theme={theme}>
-        <ColorModeProvider>
+        {/* <ColorModeProvider> */}
           <CSSReset />
           <Component {...pageProps} />
-        </ColorModeProvider>
+        {/* </ColorModeProvider> */}
       </ThemeProvider>
     </Provider>
   );
