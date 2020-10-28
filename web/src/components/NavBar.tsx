@@ -7,12 +7,12 @@ interface NavBarProps {}
 
 const NavBar: React.FC<NavBarProps> = () => {
   const [{ data, fetching }] = useMeQuery();
-  let body = null;
+  let body;
 
   if (fetching) {
     //data is loading
+    body = null;
   } else if (!data?.me) {
-    console.log("its here");
     body = (
       <>
         <NextLink href="/login">
@@ -24,20 +24,17 @@ const NavBar: React.FC<NavBarProps> = () => {
       </>
     );
   } else {
-    console.log("its here2");
     body = (
       <Flex>
         <Box mr={2}>{data.me.username}</Box>
-        <Box>
-          <Button variant="link">Logout</Button>
-        </Box>
+        <Button variant="link">Logout</Button>
       </Flex>
     );
   }
 
   return (
-    <Flex bg="tomato" p={4} ml={"auto"}>
-      {body}
+    <Flex bg="tan" p={4}>
+      <Box ml={"auto"}>{body}</Box>
     </Flex>
   );
 };
