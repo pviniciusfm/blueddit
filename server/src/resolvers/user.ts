@@ -11,6 +11,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { COOKIE_NAME } from "../constants";
 
 @InputType()
 class UsernamePasswordInput {
@@ -39,12 +40,12 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, {nullable: true})
+  @Query(() => User, { nullable: true })
   async me(@Ctx() { em, req }: MyContext): Promise<User | null> {
-    if (!req.session.userId){
-        return null
+    if (!req.session.userId) {
+      return null;
     }
-    return await em.findOne(User, {id: req.session.userId})
+    return await em.findOne(User, { id: req.session.userId });
   }
 
   @Query(() => [User])
@@ -56,30 +57,30 @@ export class UserResolver {
   User(@Arg("id") id: number, @Ctx() { em }: MyContext): Promise<User | null> {
     return em.findOne(User, { id });
   }
-  
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
-    const errors = []
+    const errors = [];
 
     if (options.username.length < 2) {
       errors.push({
         field: "username",
         message: "username must be greater than 2 characters",
-      })
+      });
     }
-    
-    if (options.password.length < 2){
+
+    if (options.password.length < 2) {
       errors.push({
         field: "password",
         message: "password must be greater than 2 characters",
-      })
+      });
     }
 
-    if (errors.length){
-     return {errors}
+    if (errors.length) {
+      return { errors };
     }
 
     const passHash = await argon2.hash(options.password);
@@ -103,7 +104,7 @@ export class UserResolver {
       }
       console.log(`error when trying to register user. ${err.message}`);
     }
-    req.session.userId = user.id
+    req.session.userId = user.id;
 
     return { user };
   }
@@ -137,7 +138,7 @@ export class UserResolver {
         ],
       };
     }
-    req.session.userId = user.id
+    req.session.userId = user.id;
 
     return { user };
   }
@@ -153,5 +154,20 @@ export class UserResolver {
     } catch (error) {
       return false;
     }
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 }
