@@ -1,19 +1,21 @@
-import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
 import express from "express";
+import session from "express-session";
+import redis from "redis";
+import "reflect-metadata";
 import { buildSchema } from "type-graphql";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import microConfig from "./mikro-orm.config";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import redis from "redis";
-import session from "express-session";
-import connectRedis from "connect-redis";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import cors from "cors";
+import { sendEmail } from "./utils/sendEmail";
 
 const main = async () => {
+  sendEmail("fred@foo.com", "That's a test from nodemailer");
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
 
