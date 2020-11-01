@@ -13,8 +13,8 @@ export async function sendEmail(to: string, html: string) {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "czv3zxy77ls73r3c@ethereal.email",
-      pass: "fuMtCpzWS4mf511Fwt",
+      user: process.env.NODEMAILER_USER,
+      pass: process.env.NODEMAILER_PASSWORD,
     },
   });
 
